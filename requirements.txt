@@ -5,4 +5,4 @@ yt-dlp==2023.12.30
 fuzzywuzzy==0.18.0
 python-Levenshtein==0.23.0
 urllib3==2.1.0
-serverless-wsgi==3.0.3
+gunicorn==21.2.0
