@@ -1,0 +1,7 @@
+Flask==3.0.0
+requests==2.31.0
+pycryptodome==3.19.0
+yt-dlp==2023.12.30
+fuzzywuzzy==0.18.0
+python-Levenshtein==0.23.0
+urllib3==2.1.0
