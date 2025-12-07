@@ -5,17 +5,16 @@
 [functions]
   directory = "netlify/functions"
 
+# Serve static files directly (no function call)
 [[redirects]]
   from = "/static/*"
   to = "/static/:splat"
   status = 200
+  force = false
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/server/:splat"
-  status = 200
-
+# All other routes go through the Flask function
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/server/:splat"
   status = 200
+  force = true
