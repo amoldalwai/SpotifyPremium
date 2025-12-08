@@ -295,12 +295,11 @@ def get_youtube_audio_url(video_id):
             'format': 'bestaudio/best',
             'quiet': True,
             'no_warnings': True,
-            'nocheckcertificate': True,  # Skip SSL certificate verification like --no-check-certificates
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '320',
-            }],
+            'nocheckcertificate': True,
+            'socket_timeout': 30,  # Add timeout
+            'http_chunk_size': 10485760,  # 10MB chunks
+            'extractor_retries': 3,
+            'retries': 3,
         }
         
         url = f'https://www.youtube.com/watch?v={video_id}'
