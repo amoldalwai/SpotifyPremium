@@ -291,6 +291,17 @@ def get_youtube_audio_url(video_id):
     try:
         print(f"Extracting audio URL for YouTube video: {video_id}")
         
+        # Generate dynamic cookies to bypass bot detection
+        import time
+        import random
+        
+        # Create a temporary cookie file content
+        cookies = {
+            'CONSENT': f'YES+cb.20210328-17-p0.en+FX+{random.randint(100, 999)}',
+            'VISITOR_INFO1_LIVE': ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-', k=22)),
+            'PREF': f'tz=America.New_York&f6={random.randint(1, 99999)}',
+        }
+        
         ydl_opts = {
             'format': 'bestaudio/best',
             'quiet': True,
@@ -306,7 +317,14 @@ def get_youtube_audio_url(video_id):
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-us,en;q=0.5',
                 'Sec-Fetch-Mode': 'navigate',
+                'Cookie': '; '.join([f'{k}={v}' for k, v in cookies.items()]),
             },
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'web'],
+                    'skip': ['hls', 'dash', 'translated_subs']
+                }
+            }
         }
         
         url = f'https://www.youtube.com/watch?v={video_id}'
