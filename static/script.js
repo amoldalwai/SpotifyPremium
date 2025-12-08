@@ -4,22 +4,44 @@ const searchBtn = document.getElementById('searchBtn');
 const searchResults = document.getElementById('searchResults');
 const loading = document.getElementById('loading');
 const emptyState = document.getElementById('emptyState');
-const playerContainer = document.getElementById('playerContainer');
+
+// Full Page Player Elements
+const fullpagePlayer = document.getElementById('fullpagePlayer');
+const playerBackground = document.getElementById('playerBackground');
+const backBtn = document.getElementById('backBtn');
+const fullPlayerImage = document.getElementById('fullPlayerImage');
+const fullPlayerTitle = document.getElementById('fullPlayerTitle');
+const fullPlayerArtist = document.getElementById('fullPlayerArtist');
+const fullPlayerProvider = document.getElementById('fullPlayerProvider');
+const progressFill = document.getElementById('progressFill');
+const progressThumb = document.getElementById('progressThumb');
+const fullCurrentTime = document.getElementById('fullCurrentTime');
+const fullTotalTime = document.getElementById('fullTotalTime');
+const playPauseBtnFull = document.getElementById('playPauseBtnFull');
+const prevBtnFull = document.getElementById('prevBtnFull');
+const nextBtnFull = document.getElementById('nextBtnFull');
+const shuffleBtnFull = document.getElementById('shuffleBtnFull');
+const repeatBtnFull = document.getElementById('repeatBtnFull');
+const likeBtnFull = document.getElementById('likeBtnFull');
+const volumeBtnFull = document.getElementById('volumeBtnFull');
+
+// Mini Player Elements
+const miniPlayer = document.getElementById('miniPlayer');
+const miniImage = document.getElementById('miniImage');
+const miniTitle = document.getElementById('miniTitle');
+const miniArtist = document.getElementById('miniArtist');
+const miniPlayPauseBtn = document.getElementById('miniPlayPauseBtn');
+const miniPrevBtn = document.getElementById('miniPrevBtn');
+const miniNextBtn = document.getElementById('miniNextBtn');
+const expandBtn = document.getElementById('expandBtn');
+const miniProgressBar = document.getElementById('miniProgressBar');
+
+// Audio Element
 const audioPlayer = document.getElementById('audioPlayer');
-const currentImage = document.getElementById('currentImage');
-const currentTitle = document.getElementById('currentTitle');
-const currentArtist = document.getElementById('currentArtist');
-const currentProvider = document.getElementById('currentProvider');
-const progressBar = document.getElementById('progressBar');
-const currentTime = document.getElementById('currentTime');
-const totalTime = document.getElementById('totalTime');
-const playPauseBtn = document.getElementById('playPauseBtn');
-const volumeSlider = document.getElementById('volumeSlider');
-const volumeBtn = document.getElementById('volumeBtn');
-const likeBtn = document.querySelector('.like-btn');
 
 let currentTrack = null;
 let isPlaying = false;
+let isLiked = false;
 
 // Search functionality
 searchBtn.addEventListener('click', performSearch);
@@ -127,17 +149,31 @@ function createResultItem(item) {
 async function playTrack(track) {
     currentTrack = track;
     
-    // Update UI
-    currentImage.src = track.image || 'https://via.placeholder.com/80?text=No+Image';
-    currentImage.onerror = function() {
+    // Update Mini Player UI
+    miniImage.src = track.image || 'https://via.placeholder.com/80?text=No+Image';
+    miniImage.onerror = function() {
         this.src = 'https://via.placeholder.com/80?text=No+Image';
     };
-    currentTitle.textContent = track.title;
-    currentArtist.textContent = track.artist || 'Unknown Artist';
-    currentProvider.textContent = track.provider;
-    currentProvider.className = `provider-badge ${track.provider}`;
+    miniTitle.textContent = track.title;
+    miniArtist.textContent = track.artist || 'Unknown Artist';
     
-    playerContainer.style.display = 'grid';
+    // Update Full Player UI
+    fullPlayerImage.src = track.image || 'https://via.placeholder.com/400?text=No+Image';
+    fullPlayerImage.onerror = function() {
+        this.src = 'https://via.placeholder.com/400?text=No+Image';
+    };
+    fullPlayerTitle.textContent = track.title;
+    fullPlayerArtist.textContent = track.artist || 'Unknown Artist';
+    fullPlayerProvider.textContent = track.provider;
+    
+    // Set background
+    if (track.image) {
+        playerBackground.style.backgroundImage = `url(${track.image})`;
+    }
+    
+    // Show mini player and expand to full view
+    miniPlayer.style.display = 'flex';
+    fullpagePlayer.style.display = 'flex';
     
     try {
         // Get stream URL from backend
@@ -153,7 +189,7 @@ async function playTrack(track) {
             audioPlayer.src = data.url;
             audioPlayer.play().then(() => {
                 isPlaying = true;
-                updatePlayButton();
+                updatePlayButtons();
             }).catch(err => {
                 console.error('Play error:', err);
                 alert('Error playing track. The stream may have expired. Try searching again.');
@@ -167,8 +203,27 @@ async function playTrack(track) {
     }
 }
 
-// Play/Pause functionality
-playPauseBtn.addEventListener('click', () => {
+// Player View Toggle
+backBtn.addEventListener('click', () => {
+    fullpagePlayer.style.display = 'none';
+});
+
+expandBtn.addEventListener('click', () => {
+    fullpagePlayer.style.display = 'flex';
+});
+
+// Click on mini player track info to expand
+document.querySelector('.mini-player-track').addEventListener('click', () => {
+    fullpagePlayer.style.display = 'flex';
+});
+
+// Play/Pause functionality - Full Player
+playPauseBtnFull.addEventListener('click', togglePlayPause);
+
+// Play/Pause functionality - Mini Player
+miniPlayPauseBtn.addEventListener('click', togglePlayPause);
+
+function togglePlayPause() {
     if (isPlaying) {
         audioPlayer.pause();
         isPlaying = false;
@@ -176,98 +231,123 @@ playPauseBtn.addEventListener('click', () => {
         audioPlayer.play();
         isPlaying = true;
     }
-    updatePlayButton();
-});
+    updatePlayButtons();
+}
 
-function updatePlayButton() {
-    const icon = playPauseBtn.querySelector('i');
+function updatePlayButtons() {
+    const fullIcon = playPauseBtnFull.querySelector('i');
+    const miniIcon = miniPlayPauseBtn.querySelector('i');
+    
     if (isPlaying) {
-        icon.className = 'fas fa-pause';
+        fullIcon.className = 'fas fa-pause';
+        miniIcon.className = 'fas fa-pause';
     } else {
-        icon.className = 'fas fa-play';
+        fullIcon.className = 'fas fa-play';
+        miniIcon.className = 'fas fa-play';
     }
 }
 
 // Audio player events
 audioPlayer.addEventListener('loadedmetadata', () => {
-    totalTime.textContent = formatTime(audioPlayer.duration);
-    progressBar.max = audioPlayer.duration;
+    fullTotalTime.textContent = formatTime(audioPlayer.duration);
 });
 
 audioPlayer.addEventListener('timeupdate', () => {
-    currentTime.textContent = formatTime(audioPlayer.currentTime);
-    progressBar.value = audioPlayer.currentTime;
+    const currentTimeValue = audioPlayer.currentTime;
+    const duration = audioPlayer.duration;
+    const progressPercent = (currentTimeValue / duration) * 100;
+    
+    // Update full player progress
+    fullCurrentTime.textContent = formatTime(currentTimeValue);
+    progressFill.style.width = progressPercent + '%';
+    progressThumb.style.left = progressPercent + '%';
+    
+    // Update mini player progress
+    miniProgressBar.style.width = progressPercent + '%';
 });
 
 audioPlayer.addEventListener('play', () => {
     isPlaying = true;
-    updatePlayButton();
+    updatePlayButtons();
 });
 
 audioPlayer.addEventListener('pause', () => {
     isPlaying = false;
-    updatePlayButton();
+    updatePlayButtons();
 });
 
 audioPlayer.addEventListener('ended', () => {
     isPlaying = false;
-    updatePlayButton();
+    updatePlayButtons();
 });
 
-progressBar.addEventListener('input', () => {
-    audioPlayer.currentTime = progressBar.value;
-});
-
-// Volume control
-volumeSlider.addEventListener('input', () => {
-    audioPlayer.volume = volumeSlider.value / 100;
-    updateVolumeIcon();
-});
-
-volumeBtn.addEventListener('click', () => {
-    if (audioPlayer.volume > 0) {
-        audioPlayer.volume = 0;
-        volumeSlider.value = 0;
-    } else {
-        audioPlayer.volume = 1;
-        volumeSlider.value = 100;
-    }
-    updateVolumeIcon();
-});
-
-function updateVolumeIcon() {
-    const icon = volumeBtn.querySelector('i');
-    const volume = audioPlayer.volume;
+// Progress bar click to seek - Full Player
+document.querySelector('.progress-bar-full').addEventListener('click', (e) => {
+    const progressBar = e.currentTarget;
+    const clickX = e.offsetX;
+    const width = progressBar.offsetWidth;
+    const duration = audioPlayer.duration;
     
-    if (volume === 0) {
-        icon.className = 'fas fa-volume-mute';
-    } else if (volume < 0.5) {
-        icon.className = 'fas fa-volume-down';
+    audioPlayer.currentTime = (clickX / width) * duration;
+});
+
+// Volume control - Full Player
+let isMuted = false;
+let previousVolume = 1;
+
+volumeBtnFull.addEventListener('click', () => {
+    if (isMuted) {
+        audioPlayer.volume = previousVolume;
+        volumeBtnFull.querySelector('i').className = 'fas fa-volume-up';
+        isMuted = false;
     } else {
-        icon.className = 'fas fa-volume-up';
+        previousVolume = audioPlayer.volume;
+        audioPlayer.volume = 0;
+        volumeBtnFull.querySelector('i').className = 'fas fa-volume-mute';
+        isMuted = true;
     }
-}
-
-// Like button
-likeBtn.addEventListener('click', () => {
-    likeBtn.classList.toggle('active');
 });
 
-// Shuffle, prev, next, repeat buttons (placeholder functionality)
-document.getElementById('shuffleBtn').addEventListener('click', () => {
-    console.log('Shuffle clicked');
+// Like button - Full Player
+likeBtnFull.addEventListener('click', () => {
+    isLiked = !isLiked;
+    const icon = likeBtnFull.querySelector('i');
+    
+    if (isLiked) {
+        icon.className = 'fas fa-heart';
+        likeBtnFull.classList.add('active');
+    } else {
+        icon.className = 'far fa-heart';
+        likeBtnFull.classList.remove('active');
+    }
 });
 
-document.getElementById('prevBtn').addEventListener('click', () => {
-    console.log('Previous clicked');
+// Control buttons - Full Player
+shuffleBtnFull.addEventListener('click', () => {
+    shuffleBtnFull.classList.toggle('active');
+    console.log('Shuffle toggled');
 });
 
-document.getElementById('nextBtn').addEventListener('click', () => {
-    console.log('Next clicked');
+prevBtnFull.addEventListener('click', () => {
+    console.log('Previous track');
 });
 
-document.getElementById('repeatBtn').addEventListener('click', () => {
-    console.log('Repeat clicked');
+nextBtnFull.addEventListener('click', () => {
+    console.log('Next track');
+});
+
+repeatBtnFull.addEventListener('click', () => {
+    repeatBtnFull.classList.toggle('active');
+    console.log('Repeat toggled');
+});
+
+// Control buttons - Mini Player
+miniPrevBtn.addEventListener('click', () => {
+    console.log('Previous track');
+});
+
+miniNextBtn.addEventListener('click', () => {
+    console.log('Next track');
 });
 
 // Format time helper

@@ -60,12 +60,17 @@ class JioSaavnService:
             if 'songs' in data and 'data' in data['songs']:
                 for song in data['songs']['data'][:limit]:
                     more_info = song.get('more_info', {})
+                    # Use 500x500 for good quality without slow loading
+                    image_url = song.get('image', '')
+                    if image_url:
+                        image_url = image_url.replace('150x150', '500x500').replace('50x50', '500x500')
+                    
                     results.append({
                         'id': song.get('id'),
                         'title': song.get('title', ''),
                         'artist': more_info.get('singers', song.get('subtitle', '')),
                         'album': more_info.get('album', ''),
-                        'image': song.get('image', '').replace('150x150', '500x500'),
+                        'image': image_url,
                         'duration': more_info.get('duration', ''),
                         'year': song.get('year', ''),
                         'language': song.get('language', ''),
