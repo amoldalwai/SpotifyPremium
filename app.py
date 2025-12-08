@@ -300,21 +300,22 @@ def get_youtube_audio_url(video_id):
         
         cookie = SimpleCookie()
         
-        # Generate realistic cookie values
-        visitor_id = ''.join(random.choices(string.ascii_letters + string.digits + '_-', k=22))
-        pref_value = f'tz=America.New_York&f6={random.randint(10000, 99999)}&f5={random.randint(20000, 29999)}'
+        # Use the CONSENT cookie that works
+        cookie['CONSENT'] = 'YES+1'
+        cookie['CONSENT']['domain'] = '.youtube.com'
+        cookie['CONSENT']['path'] = '/'
         
+        # Generate realistic visitor ID
+        visitor_id = ''.join(random.choices(string.ascii_letters + string.digits + '_-', k=22))
         cookie['VISITOR_INFO1_LIVE'] = visitor_id
         cookie['VISITOR_INFO1_LIVE']['domain'] = '.youtube.com'
         cookie['VISITOR_INFO1_LIVE']['path'] = '/'
         
+        # Add PREF cookie
+        pref_value = f'tz=America.New_York&f6={random.randint(10000, 99999)}&f5={random.randint(20000, 29999)}'
         cookie['PREF'] = pref_value
         cookie['PREF']['domain'] = '.youtube.com'
         cookie['PREF']['path'] = '/'
-        
-        cookie['CONSENT'] = f'YES+cb.20210328-17-p0.en+FX+{random.randint(100, 999)}'
-        cookie['CONSENT']['domain'] = '.youtube.com'
-        cookie['CONSENT']['path'] = '/'
         
         # Create temporary cookie file
         cookie_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt')
@@ -346,9 +347,12 @@ def get_youtube_audio_url(video_id):
                 'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'referer': 'https://www.youtube.com/',
                 'headers': {
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-us,en;q=0.5',
-                    'Sec-Fetch-Mode': 'navigate',
+                    'Accept': '*/*',
+                    'Accept-Language': 'en',
+                    'Accept-Encoding': 'gzip, deflate',
+                    'Content-Type': 'application/json',
+                    'Origin': 'https://www.youtube.com',
+                    'Cookie': 'CONSENT=YES+1',
                 },
                 'extractor_args': {
                     'youtube': {
