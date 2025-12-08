@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Player</title>
+    <title>Amol's Spotify</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -13,7 +13,7 @@
         <aside class="sidebar">
             <div class="logo">
                 <i class="fas fa-music"></i>
-                <span>Music Player</span>
+                <span>Amol's Spotify</span>
             </div>
             
             <nav class="nav-menu">
@@ -46,13 +46,18 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <header class="top-bar">
-                <div class="search-container">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="What do you want to listen to?" />
-                    <button id="searchBtn" class="search-btn">
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
+            <header class="hero-header">
+                <div class="hero-content">
+                    <h1 class="hero-title">Amol's Spotify</h1>
+                    <p class="hero-subtitle">Explore the ultimate music streaming app crafted by Amol Dalwai. Discover millions of songs from JioSaavn and YouTube Music, create your perfect playlist, and enjoy high-quality audio streaming completely free.</p>
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search for songs, artists, or albums..." />
+                        <button id="searchBtn" class="search-btn">
+                            <span>Search</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -61,9 +66,21 @@
                 <p>Searching...</p>
             </div>
 
-            <div id="searchResults" class="search-results"></div>
+            <div id="searchResults" class="search-results">
+                {% if trending_songs %}
+                    {% for song in trending_songs %}
+                    <div class="result-item" data-track='{"id": "{{ song.id }}", "title": "{{ song.title|replace('"', '\\"') }}", "artist": "{{ song.artist|replace('"', '\\"') }}", "image": "{{ song.image }}", "provider": "{{ song.provider }}"}'>
+                        <img src="{{ song.image }}" alt="{{ song.title }}" onerror="this.src='https://via.placeholder.com/200?text=No+Image'">
+                        <div class="result-info">
+                            <h3>{{ song.title }}</h3>
+                            <p>{{ song.artist }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
             
-            <div class="empty-state" id="emptyState">
+            <div class="empty-state" id="emptyState" style="display: {% if trending_songs %}none{% else %}flex{% endif %};">
                 <i class="fas fa-music"></i>
                 <h2>Search for your favorite music</h2>
                 <p>Find songs from JioSaavn and YouTube Music</p>

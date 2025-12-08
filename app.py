@@ -136,6 +136,51 @@ class JioSaavnService:
         except Exception as e:
             print(f"JioSaavn URL error: {e}")
             return None
+    
+    @staticmethod
+    def get_trending(limit=15):
+        """Get trending/popular songs"""
+        try:
+            params = {
+                '__call': 'content.getTrending',
+                '_format': 'json',
+                '_marker': '0',
+                'entity_type': 'song',
+                'entity_language': 'hindi'
+            }
+            
+            response = requests.get(JioSaavnService.BASE_URL, params=params, verify=False)
+            data = response.json()
+            
+            results = []
+            songs = data if isinstance(data, list) else []
+            
+            for song in songs[:limit]:
+                more_info = song.get('more_info', {})
+                # Use 500x500 for good quality without slow loading
+                image_url = song.get('image', '')
+                if image_url:
+                    image_url = image_url.replace('150x150', '500x500').replace('50x50', '500x500')
+                
+                results.append({
+                    'id': song.get('id'),
+                    'title': song.get('title', ''),
+                    'artist': more_info.get('singers', song.get('subtitle', '')),
+                    'album': more_info.get('album', ''),
+                    'image': image_url,
+                    'duration': more_info.get('duration', ''),
+                    'year': song.get('year', ''),
+                    'language': song.get('language', ''),
+                    'has_320kbps': more_info.get('320kbps') == 'true',
+                    'type': 'song',
+                    'provider': 'saavn'
+                })
+            
+            return results
+        
+        except Exception as e:
+            print(f"JioSaavn trending error: {e}")
+            return []
 
 # ==================== YouTube Music API ====================
 YTM_DOMAIN = 'music.youtube.com'
@@ -516,7 +561,19 @@ ytm_service = YtMusicService()
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Get popular songs to display on home page
+    popular_queries = ['Saiyara', 'War', 'Rolling', 'Where have you been']
+    trending_songs = []
+    
+    try:
+        for query in popular_queries:
+            songs = JioSaavnService.search(query, limit=1)
+            if songs:
+                trending_songs.extend(songs)
+        
+        return render_template('index.html', trending_songs=trending_songs)
+    except:
+        return render_template('index.html', trending_songs=[])
 
 @app.route('/providers')
 def get_providers():

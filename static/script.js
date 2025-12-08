@@ -43,6 +43,17 @@ let currentTrack = null;
 let isPlaying = false;
 let isLiked = false;
 
+// Initialize trending songs click handlers
+document.addEventListener('DOMContentLoaded', () => {
+    const trendingSongs = document.querySelectorAll('.result-item[data-track]');
+    trendingSongs.forEach(item => {
+        item.addEventListener('click', () => {
+            const trackData = JSON.parse(item.getAttribute('data-track'));
+            playTrack(trackData);
+        });
+    });
+});
+
 // Search functionality
 searchBtn.addEventListener('click', performSearch);
 searchInput.addEventListener('keypress', (e) => {
