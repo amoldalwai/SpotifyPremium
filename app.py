@@ -10,6 +10,9 @@ from Crypto.Util.Padding import unpad
 import yt_dlp
 import traceback
 from fuzzywuzzy import fuzz
+from http.cookies import SimpleCookie
+import tempfile
+import os
 
 # Disable SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -291,73 +294,107 @@ def get_youtube_audio_url(video_id):
     try:
         print(f"Extracting audio URL for YouTube video: {video_id}")
         
-        # Generate dynamic cookies to bypass bot detection
-        import time
+        # Generate dynamic cookies using SimpleCookie
         import random
+        import string
         
-        # Create a temporary cookie file content
-        cookies = {
-            'CONSENT': f'YES+cb.20210328-17-p0.en+FX+{random.randint(100, 999)}',
-            'VISITOR_INFO1_LIVE': ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-', k=22)),
-            'PREF': f'tz=America.New_York&f6={random.randint(1, 99999)}',
-        }
+        cookie = SimpleCookie()
         
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'quiet': True,
-            'no_warnings': True,
-            'nocheckcertificate': True,
-            'socket_timeout': 30,
-            'http_chunk_size': 10485760,
-            'extractor_retries': 3,
-            'retries': 3,
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'referer': 'https://www.youtube.com/',
-            'headers': {
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
-                'Sec-Fetch-Mode': 'navigate',
-                'Cookie': '; '.join([f'{k}={v}' for k, v in cookies.items()]),
-            },
-            'extractor_args': {
-                'youtube': {
-                    'player_client': ['android', 'web'],
-                    'skip': ['hls', 'dash', 'translated_subs']
+        # Generate realistic cookie values
+        visitor_id = ''.join(random.choices(string.ascii_letters + string.digits + '_-', k=22))
+        pref_value = f'tz=America.New_York&f6={random.randint(10000, 99999)}&f5={random.randint(20000, 29999)}'
+        
+        cookie['VISITOR_INFO1_LIVE'] = visitor_id
+        cookie['VISITOR_INFO1_LIVE']['domain'] = '.youtube.com'
+        cookie['VISITOR_INFO1_LIVE']['path'] = '/'
+        
+        cookie['PREF'] = pref_value
+        cookie['PREF']['domain'] = '.youtube.com'
+        cookie['PREF']['path'] = '/'
+        
+        cookie['CONSENT'] = f'YES+cb.20210328-17-p0.en+FX+{random.randint(100, 999)}'
+        cookie['CONSENT']['domain'] = '.youtube.com'
+        cookie['CONSENT']['path'] = '/'
+        
+        # Create temporary cookie file
+        cookie_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt')
+        cookie_file.write('# Netscape HTTP Cookie File\n')
+        cookie_file.write('# This is a generated file! Do not edit.\n\n')
+        
+        for key in cookie:
+            domain = cookie[key].get('domain', '.youtube.com')
+            path = cookie[key].get('path', '/')
+            secure = 'TRUE'
+            expires = '2147483647'  # Year 2038
+            name = key
+            value = cookie[key].value
+            cookie_file.write(f'{domain}\tTRUE\t{path}\t{secure}\t{expires}\t{name}\t{value}\n')
+        
+        cookie_file.close()
+        
+        try:
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'quiet': True,
+                'no_warnings': True,
+                'nocheckcertificate': True,
+                'socket_timeout': 30,
+                'http_chunk_size': 10485760,
+                'extractor_retries': 3,
+                'retries': 3,
+                'cookiefile': cookie_file.name,
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'referer': 'https://www.youtube.com/',
+                'headers': {
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-us,en;q=0.5',
+                    'Sec-Fetch-Mode': 'navigate',
+                },
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android', 'web'],
+                        'skip': ['hls', 'dash', 'translated_subs']
+                    }
                 }
             }
-        }
-        
-        url = f'https://www.youtube.com/watch?v={video_id}'
-        
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
             
-            # Try to get the best audio format URL directly
-            if 'url' in info:
-                print(f"Found direct audio URL")
-                return info['url']
+            url = f'https://www.youtube.com/watch?v={video_id}'
             
-            # Try to get the best audio format
-            if 'formats' in info:
-                # Filter audio-only formats
-                audio_formats = [f for f in info['formats'] 
-                               if f.get('acodec') != 'none' and f.get('vcodec') == 'none']
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
                 
-                if audio_formats:
-                    # Sort by audio bitrate and get the best
-                    best_audio = max(audio_formats, key=lambda x: x.get('abr', 0) or 0)
-                    audio_url = best_audio.get('url')
-                    print(f"Found best audio format: {best_audio.get('format_note', 'unknown')} - {best_audio.get('abr', 0)}kbps")
-                    return audio_url
+                # Try to get the best audio format URL directly
+                if 'url' in info:
+                    print(f"Found direct audio URL")
+                    return info['url']
                 
-                # Fallback: get any format with audio
-                for fmt in info['formats']:
-                    if fmt.get('acodec') != 'none' and fmt.get('url'):
-                        print(f"Using fallback format: {fmt.get('format_note', 'unknown')}")
-                        return fmt['url']
-            
-            print("No audio URL found")
-            return None
+                # Try to get the best audio format
+                if 'formats' in info:
+                    # Filter audio-only formats
+                    audio_formats = [f for f in info['formats'] 
+                                   if f.get('acodec') != 'none' and f.get('vcodec') == 'none']
+                    
+                    if audio_formats:
+                        # Sort by audio bitrate and get the best
+                        best_audio = max(audio_formats, key=lambda x: x.get('abr', 0) or 0)
+                        audio_url = best_audio.get('url')
+                        print(f"Found best audio format: {best_audio.get('format_note', 'unknown')} - {best_audio.get('abr', 0)}kbps")
+                        return audio_url
+                    
+                    # Fallback: get any format with audio
+                    for fmt in info['formats']:
+                        if fmt.get('acodec') != 'none' and fmt.get('url'):
+                            print(f"Using fallback format: {fmt.get('format_note', 'unknown')}")
+                            return fmt['url']
+                
+                print("No audio URL found")
+                return None
+        finally:
+            # Clean up cookie file
+            try:
+                os.unlink(cookie_file.name)
+            except:
+                pass
     
     except Exception as e:
         print(f"Error extracting YouTube audio: {e}")
