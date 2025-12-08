@@ -296,10 +296,17 @@ def get_youtube_audio_url(video_id):
             'quiet': True,
             'no_warnings': True,
             'nocheckcertificate': True,
-            'socket_timeout': 30,  # Add timeout
-            'http_chunk_size': 10485760,  # 10MB chunks
+            'socket_timeout': 30,
+            'http_chunk_size': 10485760,
             'extractor_retries': 3,
             'retries': 3,
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'referer': 'https://www.youtube.com/',
+            'headers': {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate',
+            },
         }
         
         url = f'https://www.youtube.com/watch?v={video_id}'
