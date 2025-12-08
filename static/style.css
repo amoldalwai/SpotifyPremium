@@ -247,7 +247,7 @@ body::before {
 }
 
 .search-btn {
-    padding: 12px 24px;
+    padding: 12px;
     border-radius: 500px;
     background: var(--accent-color);
     border: none;
@@ -255,14 +255,17 @@ body::before {
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
     transition: all 0.2s;
+    width: 44px;
+    height: 44px;
 }
 
 .search-btn span {
-    display: inline-block;
+    display: none;
 }
 
 .search-btn:hover {
@@ -1226,6 +1229,32 @@ body::before {
 
 
 @media (max-width: 768px) {
+    .hero-header {
+        padding: 40px 20px 30px;
+    }
+    
+    .hero-title {
+        font-size: 42px;
+    }
+    
+    .hero-subtitle {
+        font-size: 14px;
+        padding: 0 10px;
+    }
+    
+    .search-container {
+        max-width: 100%;
+        padding: 10px 16px;
+    }
+    
+    .search-btn {
+        padding: 10px 20px;
+    }
+    
+    .search-btn span {
+        display: none;
+    }
+    
     .player-content {
         padding: 20px 16px;
         gap: 24px;
@@ -1250,6 +1279,38 @@ body::before {
 }
 
 @media (max-width: 480px) {
+    .hero-header {
+        padding: 30px 16px 24px;
+    }
+    
+    .hero-title {
+        font-size: 32px;
+    }
+    
+    .hero-subtitle {
+        font-size: 13px;
+        padding: 0 5px;
+        margin-bottom: 24px;
+    }
+    
+    .search-container {
+        padding: 8px 12px;
+        gap: 8px;
+    }
+    
+    .search-container i {
+        font-size: 16px;
+    }
+    
+    #searchInput {
+        font-size: 14px;
+        padding: 6px;
+    }
+    
+    .search-btn {
+        padding: 8px 12px;
+    }
+    
     .search-results {
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
